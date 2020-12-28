@@ -1,0 +1,5 @@
+1. Je lepší dělat výběr předem při joinu nebo až pak v selectu? Nebo je lepší 
+ukládat mezivýsledky v tabulkách a ty potom spojit?
+2. Jak ošetřit jiné názvy států? Jak to změním ještě před joinem, abych nepřepsala původní tabulku economy?
+3. GINI koeficient chybí hodně hodnot
+4. 
