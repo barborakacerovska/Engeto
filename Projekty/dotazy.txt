@@ -6,4 +6,5 @@ ukládat mezivýsledky v tabulkách a ty potom spojit?
 3. GINI koeficient chybí hodně hodnot
 
 4. 
-Tabulka náboženství - trošku mordor, nejde to udělat nějak pomocí pivot table? (jde ale jak?)
+Tabulka náboženství - trošku mordor, nejde to udělat nějak třeba pomocí pivot table? (jde ale jak?)
+5. Nevím jak udělat výpočet přes několik řádků - průměrná denní teplota. Vlatně tentýž problém jako s náboženstvím

@@ -39,7 +39,7 @@ Počasí (ovlivňuje chování lidí a také schopnost šíření viru)
 ============================================================
 
 průměrná denní (nikoli noční!) teplota
-počet hodin v daném dni, kdy byly srážky nenulové
+počet hodin v daném dni, kdy byly srážky nenulové - ZBÝVÁ PŘIPOJIT
 maximální síla větru v nárazech během dne
 Napadají Vás ještě nějaké další proměnné, které bychom mohli použít? Pokud vím, měl(a) byste si vystačit s daty z následujících tabulek: countries, economies, life_expectancy, religions, covid19_basic_differences, covid19_testing, weather, lookup_table.
 

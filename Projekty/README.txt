@@ -30,3 +30,4 @@ Popis sloupců
 
 
 náboženství rok 2020
+RAIN_HOURS: počet hodin, kdy byly srážky nenulové 

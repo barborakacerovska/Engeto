@@ -73,4 +73,29 @@ group by r4.country ;
 
 
 
- 
+###Jak vytvvoøit prùmìr z teplot podle vzorce (t7+t14+2*t21)/4
+select city, date,hour, temp
+from weather w
+left join(
+	select capital_city, iso3 
+	from countries c
+	) c
+on w.city = c.capital_city 
+where date = '2020-08-08'
+and  `hour` in (6,15,21)
+
+### Poèet hodin kdy byly srážky nenulové
+select w.city, w.date, sum(case when rain=0 then 0 else 3 end) as rain_hours
+from (
+	select city, date, hour, temp, rain
+	from weather w) w
+left join(
+	select capital_city, iso3 
+	from countries c
+	) c
+on w.city = c.capital_city 
+group by city, date
+
+
+
+
