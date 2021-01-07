@@ -8,9 +8,9 @@ SELECT
 	  end as season,
 	lt.population,
 	ROUND(c.population/c.surface_area,3) as pop_density_calculated,
-	e.GDP_population, 
-	e.gini,
-	e.mortaliy_under5,
+	#e.GDP_population, 
+	#e.gini,
+	#e.mortaliy_under5,
 	c.median_age_2018,
 	c.region_in_world,
 	le.life_exp_diff
@@ -25,11 +25,6 @@ LEFT JOIN (
 	from countries c 
 	where iso3 is not null) c 
 	on lt.iso3 = c.iso3 
-LEFT JOIN (
-	select country, gini, mortaliy_under5, round(GDP/population ) as GDP_population
-	from economies e 
-	where year = 2018) e
-	on cb.country = e.country   #Vyøešit èesko a další zemì
 LEFT JOIN (
 	select le1.iso3, round(le1.life_exp_2015-le2.life_exp_1965,2) as life_exp_diff
 	from (
@@ -46,19 +41,17 @@ LEFT JOIN (
 
 	
 
-select r4.country, sum(r4.Christianity) as 'Christianity', sum(r4.Islam) as Islam, sum(r4.Hinduism) as 'Hinduism' ,
-	sum(r4.`Unaffiliated Religions`) as 'Unaffiliated Religions', sum(r4.Buddhism) as 'Buddhism', sum(r4.`Folk Religions`) as 'Folk Regions',
-	sum(r4.`Judaism`) as 'Judaism', sum(r4.`Other Religions`) as 'Other Religions'
-from (
+
+
 select r2.country, 
-	case when r3.religion='Christianity'  then round(r3.population/r2.pop_total*100,2)  else 0 end as 'Christianity',
-	case when r3.religion='Islam'  then round(r3.population/r2.pop_total*100,2)  else 0 end as 'Islam',
-	case when r3.religion='Hinduism'  then round(r3.population/r2.pop_total*100,2)  else 0 end as 'Hinduism',
-	case when r3.religion='Unaffiliated Religions'  then round(r3.population/r2.pop_total*100,2)  else 0 end as 'Unaffiliated Religions',
-	case when r3.religion='Buddhism'  then round(r3.population/r2.pop_total*100,2)  else 0 end as 'Buddhism',
-	case when r3.religion='Folk religions'  then round(r3.population/r2.pop_total*100,2)  else 0 end as 'Folk religions',
-	case when r3.religion='Judaism'  then round(r3.population/r2.pop_total*100,2)  else 0 end as 'Judaism',
-	case when r3.religion='Other Religions'  then round(r3.population/r2.pop_total*100,2)  else 0 end as 'Other Religions'
+	sum(case when r3.religion='Christianity'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Christianity',
+	sum(case when r3.religion='Islam'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Islam',
+	sum(case when r3.religion='Hinduism'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Hinduism',
+	sum(case when r3.religion='Unaffiliated Religions'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Unaffiliated Religions',
+	sum(case when r3.religion='Buddhism'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Buddhism',
+	sum(case when r3.religion='Folk religions'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Folk religions',
+	sum(case when r3.religion='Judaism'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Judaism',
+	sum(case when r3.religion='Other Religions'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Other Religions'
 from (
 	select country, sum(population) as pop_total
 	from religions r2
@@ -68,8 +61,10 @@ left join (
 	select religion, country, population
 	from religions r3 
 	where year = 2020) r3
-	on r2.country=r3.country) r4
-group by r4.country ;
+	on r2.country=r3.country
+group by r2.country;
+
+	
 
 
 
@@ -83,6 +78,7 @@ left join(
 on w.city = c.capital_city 
 where date = '2020-08-08'
 and  `hour` in (6,15,21)
+group by city
 
 ### Poèet hodin kdy byly srážky nenulové
 select w.city, w.date, sum(case when rain=0 then 0 else 3 end) as rain_hours
@@ -98,4 +94,45 @@ group by city, date
 
 
 
+# gini
+select country, year, mortaliy_under5, round(GDP/population ) as GDP_population, 
+from economies e 
+
+
+
+SELECT
+	country#,gini, `year` ,#mortaliy_under5, round(GDP/population ) as GDP_population, 
+	gini_partition ,MAX(year), FIRST_VALUE(gini) over (partition by gini_partition order by COUNTRY,`year`) as last_gini
+FROM (
+  SELECT
+    country,gini,year,
+    mortaliy_under5, GDP,population,
+    count(gini) over (order by country,`year`) as gini_partition
+  FROM economies e2 
+  where gini is not null
+  ORDER BY country,`year` asC
+) as q
+group by country;
+#ORDER BY country,`year` DESC;
+
+### gini v posledních 8 letech
+SELECT
+	country,`year` as last_gini_year,LAST_VALUE(gini) over (order by country, `year`)
+FROM (
+  SELECT
+    country,gini,year
+  FROM economies e2
+  where gini is not null and `year` >2013
+) as e_g
+group by country asc
+;
+
+SELECT
+	country,gini,`year` 
+FROM (
+  SELECT
+    country,gini,year
+  FROM economies e2
+  where  country in ('Zambia')
+) as e_g
 
