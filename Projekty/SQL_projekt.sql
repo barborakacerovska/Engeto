@@ -40,7 +40,7 @@ LEFT JOIN (
 
 
 	
-
+--- RELIGION -------------
 
 
 select r2.country, 
@@ -66,19 +66,17 @@ group by r2.country;
 
 	
 
+--- --WEATHER------------------
 
-
-###Jak vytvvoøit prùmìr z teplot podle vzorce (t7+t14+2*t21)/4
-select city, date,hour, temp
+###	Prùmìr z teplot (jaká je denní/noèní?)
+select city, date, avg(temp), c.iso3
 from weather w
 left join(
 	select capital_city, iso3 
 	from countries c
 	) c
 on w.city = c.capital_city 
-where date = '2020-08-08'
-and  `hour` in (6,15,21)
-group by city
+group by city, date
 
 ### Poèet hodin kdy byly srážky nenulové
 select w.city, w.date, sum(case when rain=0 then 0 else 3 end) as rain_hours
@@ -90,49 +88,46 @@ left join(
 	from countries c
 	) c
 on w.city = c.capital_city 
-group by city, date
+group by city, date;
 
 
 
-# gini
-select country, year, mortaliy_under5, round(GDP/population ) as GDP_population, 
-from economies e 
+--- ECONOMY --------------
 
 
-
-SELECT
-	country#,gini, `year` ,#mortaliy_under5, round(GDP/population ) as GDP_population, 
-	gini_partition ,MAX(year), FIRST_VALUE(gini) over (partition by gini_partition order by COUNTRY,`year`) as last_gini
-FROM (
-  SELECT
-    country,gini,year,
-    mortaliy_under5, GDP,population,
-    count(gini) over (order by country,`year`) as gini_partition
-  FROM economies e2 
-  where gini is not null
-  ORDER BY country,`year` asC
-) as q
+# GDP population 2018
+select country, 
+	round(LAST_VALUE(GDP) over (order by country, `year`)/population) as GDP_population 
+from (
+	select country, `year` , GDP, population
+	from economies e
+	where `year` > 2015 and gdp IS not null and population is not null 
+	)
+	as e_gdp
 group by country;
-#ORDER BY country,`year` DESC;
 
-### gini v posledních 8 letech
+### Gini v posledních 5 letech 
 SELECT
-	country,`year` as last_gini_year,LAST_VALUE(gini) over (order by country, `year`)
+	country,
+	LAST_VALUE(gini) over (order by country, `year`) as GINI  #, `year` as last_gini_year
 FROM (
-  SELECT
-    country,gini,year
-  FROM economies e2
-  where gini is not null and `year` >2013
-) as e_g
-group by country asc
+  	SELECT							
+    country,gini, `year` , mortaliy_under5 
+  	FROM economies e2
+  	where gini is not null and `year` >2015
+	)
+	as e_g
+group by country
 ;
 
+### Mortality under 5 
 SELECT
-	country,gini,`year` 
+	country,
+	LAST_VALUE(mortaliy_under5) over (order by country, `year`) as MORTALITY_5 #, `year` as last_mort_year
 FROM (
-  SELECT
-    country,gini,year
+  SELECT							
+    country,mortaliy_under5 , `year` 
   FROM economies e2
-  where  country in ('Zambia')
-) as e_g
-
+  where mortaliy_under5 is not null 
+) as e_mu5
+group by country
