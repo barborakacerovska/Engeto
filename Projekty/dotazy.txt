@@ -1,10 +1,16 @@
-﻿1. Je lepší 
-ukládat mezivýsledky v tabulkách a ty potom spojit?
+﻿
 
-2. Jak ošetřit jiné názvy států? Jak to změním ještě před joinem, abych nepřepsala původní tabulku economy?
 
-3. GINI koeficient chybí hodně hodnot
 
-4. 
-Tabulka náboženství - trošku mordor, nejde to udělat nějak třeba pomocí pivot table? (jde ale jak?)
-5. Nevím jak udělat výpočet přes několik řádků - průměrná denní teplota. Vlatně tentýž problém jako s náboženstvím
+
+PANDAS:
+1) .assign(count=1).... groupby()..count()  . Proč mi count() neudělá nový sloupec
+
+když vymažu count() a sort_values, tak mi groupby nedá stanice dokupy
+
+k čemu tam musím mít to count_end=1, když to hodí stejný výsledek pro jakékoliv číslo
+
+2) AKTIVNÍ/NEAKTIVNÍ STANICE, NEJFREKVENTOVANĚJŠÍ
+je to myšleno tak, jak to mám? aktivní zároveň ukazují na nejfrekventovatější
+
+3) Jak zkontroluju u multiindexu, že každému hlavnímu indexu patří právě jeden další index (id stanice má dvě jména bo překlep)
