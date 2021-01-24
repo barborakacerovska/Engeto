@@ -14,3 +14,7 @@ k čemu tam musím mít to count_end=1, když to hodí stejný výsledek pro jak
 je to myšleno tak, jak to mám? aktivní zároveň ukazují na nejfrekventovatější
 
 3) Jak zkontroluju u multiindexu, že každému hlavnímu indexu patří právě jeden další index (id stanice má dvě jména bo překlep)
+
+4) jaro leto podzim zima, jak zobrazim
+
+5) problém s deštěm
