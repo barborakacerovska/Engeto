@@ -8,9 +8,6 @@ SELECT
 	  end as season,
 	lt.population,
 	ROUND(c.population/c.surface_area,3) as pop_density_calculated,
-	#e.GDP_population, 
-	#e.gini,
-	#e.mortaliy_under5,
 	c.median_age_2018,
 	c.region_in_world,
 	le.life_exp_diff
@@ -42,7 +39,7 @@ LEFT JOIN (
 	
 --- RELIGION -------------
 
-
+create or replace table t_barbora_kacerovska_SQL_religion as
 select r2.country, 
 	sum(case when r3.religion='Christianity'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Christianity',
 	sum(case when r3.religion='Islam'  then round(r3.population/r2.pop_total*100,2)  else 0 end) as 'Islam',
@@ -68,66 +65,44 @@ group by r2.country;
 
 --- --WEATHER------------------
 
-###	Prùmìr z teplot (jaká je denní/noèní?)
-select city, date, avg(temp), c.iso3
-from weather w
-left join(
-	select capital_city, iso3 
-	from countries c
-	) c
-on w.city = c.capital_city 
-group by city, date
-
-### Poèet hodin kdy byly srážky nenulové
-select w.city, w.date, sum(case when rain=0 then 0 else 3 end) as rain_hours
-from (
-	select city, date, hour, temp, rain
-	from weather w) w
-left join(
-	select capital_city, iso3 
-	from countries c
-	) c
-on w.city = c.capital_city 
-group by city, date;
-
+create or replace table t_barbora_kacerovska_SQL_weather as
+select capital_city, iso3, rain.date, rain.gust_max, rain.rain_hours, temp.avg_temp
+from countries c
+join (
+	select city, date, max(gust) as gust_max, sum(case when rain=0 then 0 else 3 end) as rain_hours
+	from weather w3 
+	group by city, date) rain
+	on capital_city = rain.city
+left join (
+	select w.city, w.date, avg(w.temp) as avg_temp
+	from weather w    
+	where w.hour in (6,9,12,15,18)
+	group by w.city, w.date) temp
+	on capital_city = temp.city
+ 	and rain.date = temp.date
 
 
 --- ECONOMY --------------
 
 
-# GDP population 2018
-select country, 
-	round(LAST_VALUE(GDP) over (order by country, `year`)/population) as GDP_population 
-from (
-	select country, `year` , GDP, population
-	from economies e
-	where `year` > 2015 and gdp IS not null and population is not null 
-	)
-	as e_gdp
-group by country;
+# GDP population 2018 ###################################################
+################################################################## tady jse mskoncla
+select e2.country, round(LAST_VALUE(GDP) over (order by country, `year`)/population) as GDP_population 
+from economies e2 
+JOIN(
+	select country, first_value(gini) over (partition by country) as gini
+	from economies e2 
+	where gini is not null and `year` >2015
+	group by country) gini
+	on e2.country = gini.country
+where GDP is not null and `year` >2015
+group by e2.country
 
-### Gini v posledních 5 letech 
-SELECT
-	country,
-	LAST_VALUE(gini) over (order by country, `year`) as GINI  #, `year` as last_gini_year
-FROM (
-  	SELECT							
-    country,gini, `year` , mortaliy_under5 
-  	FROM economies e2
-  	where gini is not null and `year` >2015
-	)
-	as e_g
-group by country
-;
 
 ### Mortality under 5 
-SELECT
-	country,
-	LAST_VALUE(mortaliy_under5) over (order by country, `year`) as MORTALITY_5 #, `year` as last_mort_year
-FROM (
-  SELECT							
-    country,mortaliy_under5 , `year` 
-  FROM economies e2
-  where mortaliy_under5 is not null 
-) as e_mu5
-group by country
+SELECT 	country, LAST_VALUE(mortaliy_under5) over (order by country, `year`) as MORTALITY_5 
+FROM economies e2 
+where mortaliy_under5 is not null and `year` >2015
+group by country;
+
+

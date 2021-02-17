@@ -30,5 +30,7 @@ Popis sloupců
 
 
 náboženství rok 2020
-průměrná denní teplota spočtena podle vzorce (t7+t15+2*t21)/4
+
 RAIN_HOURS: počet hodin, kdy byly srážky nenulové 
+GUST_MAX: maximální síla větru v nárazech během dne
+AVG_TEMP: průměrná denní teplota (spočteno z údajů pro 6AM - 6PM v tříhodinových intervalech)
