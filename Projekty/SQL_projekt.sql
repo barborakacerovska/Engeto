@@ -1,3 +1,21 @@
+
+--- FINAL -----
+
+SELECT c.*, 
+		le.LIFE_EXP_DIFF, le.median_age_2018, le.POP_DENSITY_CALCULATED, le.population, le.region_in_world, le.surface_area,
+		e.GDP_population, e.GINI, e.MORTALITY_5,
+		w.AVG_TEMP, w.GUST_MAX, w.RAIN_HOURS 
+from t_barbora_kacerovska_SQL_covid c
+left join t_barbora_kacerovska_SQL_LE le on c.iso3 = le.iso3 
+left join t_barbora_kacerovska_SQL_economy e on c.country = e.country
+left join t_barbora_kacerovska_SQL_weather w on c.iso3 = w.iso3 and c.date = w.date
+left join t_barbora_kacerovska_SQL_religion r on c.country = r.country;
+
+
+
+
+--- COVID DATA ----- 
+create or replace table t_barbora_kacerovska_SQL_covid as
 SELECT 
 	cb.*,
 	case when weekday(date) in (5,6) then 1 else 0 end as weekend,  # 5=sobota,  6=nedele
@@ -5,39 +23,30 @@ SELECT
       when month(date) in (3, 4, 5) then 1
       when month(date) in (6, 7, 8) then 2
       when month(date) in (9, 10, 11) then 3 # mesice
-	  end as season,
-	lt.population,
-	ROUND(c.population/c.surface_area,3) as pop_density_calculated,
-	c.median_age_2018,
-	c.region_in_world,
-	le.life_exp_diff
-FROM (select * from covid19_basic cb where date='2020-03-03') cb   #doèasnì, **********ZRUŠIT
-LEFT JOIN (   							
-	select population, country, iso3 
-	from lookup_table lt
-	where province is null ) lt
-	on cb.country = lt.country
-LEFT JOIN (
+	  end as SEASON
+FROM (select * from covid19_basic cb where date='2020-03-03') cb;   #doèasnì, **********ZRUŠIT
+
+
+-- LIFE EXPECTANCY + BASIC INFO----- 
+create or replace table t_barbora_kacerovska_SQL_LE as;
+select le1.iso3, c.median_age_2018, ROUND(c.population/c.surface_area,3) as POP_DENSITY_CALCULATED, c.region_in_world, c.population, c.surface_area, round(le1.life_exp_2015-le2.life_exp_1965,2) as LIFE_EXP_DIFF
+from (
+	select iso3, life_expectancy as 'life_exp_2015'  from life_expectancy le 
+	where year = 2015) le1
+left join (
+	select iso3, life_expectancy as 'life_exp_1965' from life_expectancy le 
+	where year = 1965) le2
+	on le1.iso3 = le2.iso3
+left JOIN (
 	select iso3, median_age_2018, region_in_world, population, surface_area
 	from countries c 
 	where iso3 is not null) c 
-	on lt.iso3 = c.iso3 
-LEFT JOIN (
-	select le1.iso3, round(le1.life_exp_2015-le2.life_exp_1965,2) as life_exp_diff
-	from (
-		select iso3, life_expectancy as 'life_exp_2015'  from life_expectancy le 
-		where year = 2015) le1
-	left join (
-		select iso3, life_expectancy as 'life_exp_1965' from life_expectancy le 
-		where year = 1965) le2
-		on le1.iso3 = le2.iso3
-	where le1.iso3 is not null) le
-	on lt.iso3 = le.iso3;
-
-
+	on le1.iso3 = c.iso3 
+where le1.iso3 is not null
 
 	
---- RELIGION -------------
+--- RELIGION ----------
+
 
 create or replace table t_barbora_kacerovska_SQL_religion as
 select r2.country, 
@@ -59,22 +68,20 @@ left join (
 	from religions r3 
 	where year = 2020) r3
 	on r2.country=r3.country
-group by r2.country;
+group by r2.country;	
 
-	
+--- --WEATHER-------------
 
---- --WEATHER------------------
-
-create or replace table t_barbora_kacerovska_SQL_weather as
-select capital_city, iso3, rain.date, rain.gust_max, rain.rain_hours, temp.avg_temp
+create or replace table t_barbora_kacerovska_SQL_weather as;
+select capital_city, iso3, rain.date, rain.GUST_MAX, rain.RAIN_HOURS, temp.AVG_TEMP
 from countries c
 join (
-	select city, date, max(gust) as gust_max, sum(case when rain=0 then 0 else 3 end) as rain_hours
+	select city, date, max(gust) as GUST_MAX, sum(case when rain=0 then 0 else 3 end) as RAIN_HOURS
 	from weather w3 
 	group by city, date) rain
 	on capital_city = rain.city
 left join (
-	select w.city, w.date, avg(w.temp) as avg_temp
+	select w.city, w.date, avg(w.temp) as AVG_TEMP
 	from weather w    
 	where w.hour in (6,9,12,15,18)
 	group by w.city, w.date) temp
@@ -82,27 +89,24 @@ left join (
  	and rain.date = temp.date
 
 
---- ECONOMY --------------
+--- ECONOMY --------
 
-
-# GDP population 2018 ###################################################
-################################################################## tady jse mskoncla
-select e2.country, round(LAST_VALUE(GDP) over (order by country, `year`)/population) as GDP_population 
+create or replace table t_barbora_kacerovska_SQL_economy as;
+select e2.country,round(LAST_VALUE(GDP) over (order by country, `year`)/population) as GDP_population , gini.GINI, mort.MORTALITY_5 #,   COUNT(*) OVER () AS TotalRecords
 from economies e2 
-JOIN(
-	select country, first_value(gini) over (partition by country) as gini
+LEFT JOIN(
+	select country, first_value(gini) over (partition by country) as GINI
 	from economies e2 
-	where gini is not null and `year` >2015
+	where gini is not null and `year`>2015
 	group by country) gini
 	on e2.country = gini.country
-where GDP is not null and `year` >2015
+LEFT JOIN(
+	SELECT 	country, ROUND(LAST_VALUE(mortaliy_under5) over (order by country, `year`),1) as MORTALITY_5 
+	FROM economies e2 
+	where mortaliy_under5 is not null and `year`>2015
+	group by country) mort
+	on e2.country = mort.country
+where GDP is not null and `year`>2015
 group by e2.country
-
-
-### Mortality under 5 
-SELECT 	country, LAST_VALUE(mortaliy_under5) over (order by country, `year`) as MORTALITY_5 
-FROM economies e2 
-where mortaliy_under5 is not null and `year` >2015
-group by country;
 
 
