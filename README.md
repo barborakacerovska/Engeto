@@ -1,2 +1,2 @@
 # Engeto
-Engeto courses projects
+Engeto SQL and Pandas projects
